@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 	"text/template"
@@ -27,12 +28,21 @@ type Config struct {
 }
 
 type BuildOptions struct {
+	BuildDir   string
 	LayoutsDir string
 	PagesDir   string
-	BuildDir   string
+	StaticsDir string
 }
 
 func Build(options BuildOptions) error {
+	fmt.Println("Copying static files from", options.StaticsDir)
+	copyStatics := exec.Command("cp", "-va", options.StaticsDir+"/", options.BuildDir)
+	copyOutput, err := copyStatics.CombinedOutput()
+	fmt.Println(string(copyOutput))
+	if err != nil {
+		return fmt.Errorf("could not copy static files")
+	}
+
 	pages, err := exploreDir(options.PagesDir)
 	if err != nil {
 		return err
@@ -67,6 +77,7 @@ func Build(options BuildOptions) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
