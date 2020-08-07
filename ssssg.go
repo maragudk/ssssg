@@ -28,14 +28,14 @@ type Config struct {
 }
 
 type BuildOptions struct {
-	BuildDir   string
-	LayoutsDir string
-	PagesDir   string
-	StaticsDir string
+	BuildDir      string
+	ComponentsDir string
+	LayoutsDir    string
+	PagesDir      string
+	StaticsDir    string
 }
 
 func Build(options BuildOptions) error {
-	fmt.Println("Copying static files from", options.StaticsDir)
 	copyStatics := exec.Command("cp", "-va", options.StaticsDir+"/", options.BuildDir)
 	copyOutput, err := copyStatics.CombinedOutput()
 	fmt.Println(string(copyOutput))
@@ -47,13 +47,31 @@ func Build(options BuildOptions) error {
 	if err != nil {
 		return err
 	}
-	t, err := template.New("layouts").ParseFiles(path.Join(options.LayoutsDir, "default.html"))
+
+	t, err := template.New("layouts/default.html").ParseFiles(path.Join(options.LayoutsDir, "default.html"))
+	if err != nil {
+		return err
+	}
+
+	t, err = parseComponents(t, options.ComponentsDir)
 	if err != nil {
 		return err
 	}
 
 	for _, page := range pages {
 		fmt.Println("Building", page.Path)
+		var content strings.Builder
+		t, err = t.New(page.Path).Parse(page.Body)
+		if err != nil {
+			return err
+		}
+
+		err = t.ExecuteTemplate(&content, page.Path, nil)
+		if err != nil {
+			return err
+		}
+		page.Body = content.String()
+
 		if page.Layout == "" {
 			page.Layout = "default.html"
 		}
@@ -73,6 +91,7 @@ func Build(options BuildOptions) error {
 		if err != nil {
 			return err
 		}
+
 		if err := t.ExecuteTemplate(output, page.Layout, page); err != nil {
 			return err
 		}

@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	BuildDirConfigName   = "buildDir"
-	LayoutsDirConfigName = "layoutsDir"
-	PagesDirConfigName   = "pagesDir"
-	StaticsDirConfigName = "staticsDir"
+	BuildDirConfigName      = "buildDir"
+	ComponentsDirConfigName = "componentsDir"
+	LayoutsDirConfigName    = "layoutsDir"
+	PagesDirConfigName      = "pagesDir"
+	StaticsDirConfigName    = "staticsDir"
 )
 
 func main() {
@@ -21,6 +22,7 @@ func main() {
 	viper.AddConfigPath(".")
 
 	viper.SetDefault(BuildDirConfigName, "docs")
+	viper.SetDefault(ComponentsDirConfigName, "components")
 	viper.SetDefault(LayoutsDirConfigName, "layouts")
 	viper.SetDefault(PagesDirConfigName, "pages")
 	viper.SetDefault(StaticsDirConfigName, "statics")
@@ -30,10 +32,11 @@ func main() {
 	}
 
 	if err := ssssg.Build(ssssg.BuildOptions{
-		BuildDir:   viper.GetString(BuildDirConfigName),
-		LayoutsDir: viper.GetString(LayoutsDirConfigName),
-		PagesDir:   viper.GetString(PagesDirConfigName),
-		StaticsDir: viper.GetString(StaticsDirConfigName),
+		BuildDir:      viper.GetString(BuildDirConfigName),
+		ComponentsDir: viper.GetString(ComponentsDirConfigName),
+		LayoutsDir:    viper.GetString(LayoutsDirConfigName),
+		PagesDir:      viper.GetString(PagesDirConfigName),
+		StaticsDir:    viper.GetString(StaticsDirConfigName),
 	}); err != nil {
 		printFatal("Error building site:", err)
 	}
