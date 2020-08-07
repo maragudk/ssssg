@@ -5,3 +5,4 @@ build:
 
 run: build
 	./ssssg
+	prettier --write "docs/**/*.html"
