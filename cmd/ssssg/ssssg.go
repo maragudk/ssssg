@@ -10,27 +10,30 @@ import (
 )
 
 const (
+	BuildDirConfigName   = "buildDir"
 	LayoutsDirConfigName = "layoutsDir"
 	PagesDirConfigName   = "pagesDir"
-	BuildDirConfigName   = "buildDir"
+	StaticsDirConfigName = "staticsDir"
 )
 
 func main() {
 	viper.SetConfigName("ssssg")
 	viper.AddConfigPath(".")
 
+	viper.SetDefault(BuildDirConfigName, "docs")
 	viper.SetDefault(LayoutsDirConfigName, "layouts")
 	viper.SetDefault(PagesDirConfigName, "pages")
-	viper.SetDefault(BuildDirConfigName, "docs")
+	viper.SetDefault(StaticsDirConfigName, "statics")
 
 	if err := viper.ReadInConfig(); err != nil {
 		printFatal("Could not read config file.", err)
 	}
 
 	if err := ssssg.Build(ssssg.BuildOptions{
+		BuildDir:   viper.GetString(BuildDirConfigName),
 		LayoutsDir: viper.GetString(LayoutsDirConfigName),
 		PagesDir:   viper.GetString(PagesDirConfigName),
-		BuildDir:   viper.GetString(BuildDirConfigName),
+		StaticsDir: viper.GetString(StaticsDirConfigName),
 	}); err != nil {
 		printFatal("Error building site:", err)
 	}
