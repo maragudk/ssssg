@@ -20,6 +20,11 @@ type Page struct {
 	Layout string
 }
 
+type Component struct {
+	Path    string
+	Content string
+}
+
 type Config struct {
 	Meta struct {
 		Title       string
@@ -28,14 +33,14 @@ type Config struct {
 }
 
 type BuildOptions struct {
-	BuildDir   string
-	LayoutsDir string
-	PagesDir   string
-	StaticsDir string
+	BuildDir      string
+	ComponentsDir string
+	LayoutsDir    string
+	PagesDir      string
+	StaticsDir    string
 }
 
 func Build(options BuildOptions) error {
-	fmt.Println("Copying static files from", options.StaticsDir)
 	copyStatics := exec.Command("cp", "-va", options.StaticsDir+"/", options.BuildDir)
 	copyOutput, err := copyStatics.CombinedOutput()
 	fmt.Println(string(copyOutput))
@@ -47,13 +52,41 @@ func Build(options BuildOptions) error {
 	if err != nil {
 		return err
 	}
-	t, err := template.New("layouts").ParseFiles(path.Join(options.LayoutsDir, "default.html"))
+
+	components, err := parseComponents(options.ComponentsDir)
 	if err != nil {
 		return err
 	}
 
+	t, err := template.New("default.html").ParseFiles(path.Join(options.LayoutsDir, "default.html"))
+	if err != nil {
+		return err
+	}
+
+	for _, component := range components {
+		fmt.Println("Parsing", component.Path)
+		p := strings.TrimPrefix(component.Path, options.ComponentsDir)
+		p = strings.TrimPrefix(p, "/")
+		t, err = t.New(p).Parse(component.Content)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, page := range pages {
 		fmt.Println("Building", page.Path)
+		var content strings.Builder
+		t, err = t.New(page.Path).Parse(page.Body)
+		if err != nil {
+			return err
+		}
+
+		err = t.ExecuteTemplate(&content, page.Path, nil)
+		if err != nil {
+			return err
+		}
+		page.Body = content.String()
+
 		if page.Layout == "" {
 			page.Layout = "default.html"
 		}
@@ -73,6 +106,7 @@ func Build(options BuildOptions) error {
 		if err != nil {
 			return err
 		}
+
 		if err := t.ExecuteTemplate(output, page.Layout, page); err != nil {
 			return err
 		}
@@ -118,4 +152,34 @@ func exploreDir(dir string) ([]Page, error) {
 		pages = append(pages, page)
 	}
 	return pages, nil
+}
+
+func parseComponents(dir string) ([]Component, error) {
+	var components []Component
+	entries, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			subComponents, err := parseComponents(path.Join(dir, entry.Name()))
+			if err != nil {
+				return nil, err
+			}
+			components = append(components, subComponents...)
+			continue
+		}
+
+		p := path.Join(dir, entry.Name())
+		content, err := ioutil.ReadFile(p)
+		if err != nil {
+			return nil, err
+		}
+		components = append(components, Component{
+			Path:    p,
+			Content: string(content),
+		})
+	}
+
+	return components, nil
 }
