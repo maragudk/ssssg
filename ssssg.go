@@ -31,10 +31,12 @@ func Build(options BuildOptions) error {
 		return err
 	}
 
-	t, err := template.New("layouts/default.html").ParseFiles(path.Join(options.LayoutsDir, "default.html"))
+	t, err := template.New("layouts").ParseGlob(path.Join(options.LayoutsDir, "*.html"))
 	if err != nil {
 		return err
 	}
+
+	t = template.Must(t.New("nolayout").Parse("{{.Body}}"))
 
 	t, err = parseComponents(t, options.ComponentsDir)
 	if err != nil {
@@ -71,7 +73,14 @@ func Build(options BuildOptions) error {
 			return err
 		}
 
-		if err := t.ExecuteTemplate(output, "default.html", page); err != nil {
+		layoutName := "default.html"
+		if page.Layout != nil {
+			layoutName = *page.Layout
+		}
+		if layoutName == "" {
+			layoutName = "nolayout"
+		}
+		if err := t.ExecuteTemplate(output, layoutName, page); err != nil {
 			return err
 		}
 	}

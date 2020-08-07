@@ -14,7 +14,8 @@ type Page struct {
 		Title       string
 		Description string
 	}
-	Body string
+	Body   string
+	Layout *string
 }
 
 // readPages recursively from dir, saving the config content, the content, and the path.
