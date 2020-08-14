@@ -49,10 +49,12 @@ func main() {
 		err = ssssg.Init(options)
 	case "build":
 		err = ssssg.Build(options)
+	case "serve":
+		err = ssssg.Serve(viper.GetString(BuildDirConfigName))
 	case "version":
 		ssssg.Version()
 	default:
-		printFatal("Usage: ssssg init|build|version")
+		printFatal("Usage: ssssg init|build|serve|version")
 	}
 
 	if err != nil {
