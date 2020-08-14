@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -28,17 +29,32 @@ func main() {
 	viper.SetDefault(StaticsDirConfigName, "statics")
 
 	if err := viper.ReadInConfig(); err != nil {
-		printFatal("Could not read config file.", err)
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			printFatal("Could not read config file.", err)
+		}
 	}
 
-	if err := ssssg.Build(ssssg.BuildOptions{
+	options := ssssg.BuildOptions{
 		BuildDir:      viper.GetString(BuildDirConfigName),
 		ComponentsDir: viper.GetString(ComponentsDirConfigName),
 		LayoutsDir:    viper.GetString(LayoutsDirConfigName),
 		PagesDir:      viper.GetString(PagesDirConfigName),
 		StaticsDir:    viper.GetString(StaticsDirConfigName),
-	}); err != nil {
-		printFatal("Error building site:", err)
+	}
+
+	var err error
+	flag.Parse()
+	switch flag.Arg(0) {
+	case "init":
+		err = ssssg.Init(options)
+	case "build":
+		err = ssssg.Build(options)
+	default:
+		printFatal("Usage: ssssg init|build")
+	}
+
+	if err != nil {
+		printFatal("Error:", err)
 	}
 }
 
