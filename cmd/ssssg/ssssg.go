@@ -49,8 +49,10 @@ func main() {
 		err = ssssg.Init(options)
 	case "build":
 		err = ssssg.Build(options)
+	case "version":
+		ssssg.Version()
 	default:
-		printFatal("Usage: ssssg init|build")
+		printFatal("Usage: ssssg init|build|version")
 	}
 
 	if err != nil {
