@@ -1,10 +1,18 @@
-  <h1>Super Simple Static Site Generator</h1>
-  <p>Does the world need another static site generator? Yes, yes it does. 😄</p>
+{{template "layouts/default"}}
+{{define "title"}}Super Simple Static Site Generator{{end}}
+{{define "description"}}Does the world need another static site generator? Yes, yes it does. 😄{{end}}
 
-  <h2>Features</h2>
+{{define "content"}}
+<h1>Super Simple Static Site Generator</h1>
+<p>Does the world need another static site generator? Yes, yes it does. 😄</p>
 
-  <ul>
-    <li>As many <em>layouts</em> as you want</li>
-    <li>Build websites with <em>components</em></li>
-    <li>Your <em>pages</em> get built and voila, you have a website</li>
-  </ul>
+<h2>Features</h2>
+
+<ul>
+  <li>As many <em>layouts</em> as you want</li>
+  <li>Build websites with <em>components</em></li>
+  <li>Your <em>pages</em> get built and voila, you have a website</li>
+</ul>
+
+{{template "footer"}}
+{{end}}

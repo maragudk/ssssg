@@ -9,8 +9,6 @@ import (
 	"path"
 	"strings"
 	"text/template"
-
-	"gopkg.in/yaml.v2"
 )
 
 type BuildOptions struct {
@@ -39,8 +37,6 @@ func Build(options BuildOptions) error {
 		return err
 	}
 
-	t = template.Must(t.New("nolayout").Parse("{{.Body}}"))
-
 	t, err = parseComponents(t, options.ComponentsDir)
 	if err != nil {
 		return err
@@ -48,19 +44,12 @@ func Build(options BuildOptions) error {
 
 	for _, page := range pages {
 		fmt.Println("Building", page.Path)
-		var content strings.Builder
-		t, err = t.New(page.Path).Parse(page.Body)
+		t, err := t.New(page.Path).Parse(page.Content)
 		if err != nil {
 			return err
 		}
 
-		err = t.ExecuteTemplate(&content, page.Path, nil)
-		if err != nil {
-			return err
-		}
-		page.Body = content.String()
-
-		outputPath := path.Join(options.BuildDir, strings.TrimSuffix(strings.TrimPrefix(page.Path, options.PagesDir+"/"), ".yaml")) + ".html"
+		outputPath := path.Join(options.BuildDir, strings.TrimPrefix(page.Path, options.PagesDir+"/"))
 
 		if err := os.MkdirAll(path.Dir(outputPath), 0766); err != nil {
 			return err
@@ -76,14 +65,7 @@ func Build(options BuildOptions) error {
 			return err
 		}
 
-		layoutName := "default.html"
-		if page.Layout != nil {
-			layoutName = *page.Layout
-		}
-		if layoutName == "" {
-			layoutName = "nolayout"
-		}
-		if err := t.ExecuteTemplate(output, layoutName, page); err != nil {
+		if err := t.ExecuteTemplate(output, page.Path, nil); err != nil {
 			return err
 		}
 	}
@@ -147,13 +129,8 @@ func parseComponents(t *template.Template, dir string) (*template.Template, erro
 }
 
 type Page struct {
-	Path string
-	Meta struct {
-		Title       string
-		Description string
-	}
-	Body   string
-	Layout *string
+	Path    string
+	Content string
 }
 
 // readPages recursively from dir, saving the config content, the content, and the path.
@@ -172,25 +149,17 @@ func readPages(dir string) ([]Page, error) {
 			pages = append(pages, subPages...)
 			continue
 		}
-		if !strings.HasSuffix(entry.Name(), ".yaml") {
+		if !strings.HasSuffix(entry.Name(), ".html") {
 			continue
 		}
 
-		configContent, err := ioutil.ReadFile(path.Join(dir, entry.Name()))
-		if err != nil {
-			return nil, err
-		}
 		var page Page
-		if err := yaml.Unmarshal(configContent, &page); err != nil {
-			return nil, err
-		}
-
-		body, err := ioutil.ReadFile(path.Join(dir, strings.TrimSuffix(entry.Name(), ".yaml")+".html"))
+		content, err := ioutil.ReadFile(path.Join(dir, entry.Name()))
 		if err != nil {
 			return nil, err
 		}
 		page.Path = path.Join(dir, entry.Name())
-		page.Body = string(body)
+		page.Content = string(content)
 		pages = append(pages, page)
 	}
 	return pages, nil

@@ -1,15 +1,17 @@
+{{define "layouts/default"}}
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{.Meta.Title}}</title>
-    <meta name="description" content="{{.Meta.Description}}" />
+    <title>{{template "title"}}</title>
+    <meta name="description" content="{{template "description"}}" />
     <link rel="stylesheet" href="bulma.min.css" />
   </head>
   <body>
     <div class="container content">
-      {{.Body}}
+      {{template "content"}}
     </div>
   </body>
 </html>
+{{end}}
