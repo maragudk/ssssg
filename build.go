@@ -9,6 +9,10 @@ import (
 	"path"
 	"strings"
 	"text/template"
+
+	"github.com/fsnotify/fsnotify"
+
+	"ssssg/errors2"
 )
 
 type BuildOptions struct {
@@ -71,6 +75,48 @@ func Build(options BuildOptions) error {
 	}
 
 	return nil
+}
+
+// Watch for changes and build.
+func Watch(options BuildOptions) error {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return errors2.Wrap(err, "could not create file watcher")
+	}
+	defer func() {
+		_ = watcher.Close()
+	}()
+
+	done := make(chan error)
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+
+				log.Println(event.Name, "changed, building", event.String())
+				if err := Build(options); err != nil {
+					done <- err
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				done <- err
+			}
+		}
+	}()
+
+	for _, dir := range []string{options.ComponentsDir, options.LayoutsDir, options.PagesDir, options.StaticsDir} {
+		if err := watcher.Add(dir); err != nil {
+			return errors2.Wrap(err, "could not add %v to watcher", dir)
+		}
+	}
+	err = <-done
+
+	return errors2.Wrap(err, "error watching")
 }
 
 type Component struct {

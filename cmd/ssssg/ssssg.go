@@ -53,8 +53,10 @@ func main() {
 		err = ssssg.Serve(viper.GetString(BuildDirConfigName))
 	case "version":
 		ssssg.Version()
+	case "watch":
+		err = ssssg.Watch(options)
 	default:
-		printFatal("Usage: ssssg init|build|serve|version")
+		printFatal("Usage: ssssg init|build|watch|serve|version")
 	}
 
 	if err != nil {
