@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-const version = "v0.4.0"
+const version = "v0.5.0"
 
 func Version() {
 	fmt.Println("ssssg", version)
