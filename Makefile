@@ -1,4 +1,4 @@
-.PHONY: bindata build clean cover install run serve test
+.PHONY: bindata build clean cover install run serve test watch
 
 bindata:
 	go-bindata -pkg assets -o assets/data.go -ignore '.*\.go' -ignore '.DS_Store' -prefix assets assets/*
@@ -24,3 +24,6 @@ serve: build
 
 test:
 	go test -coverprofile=cover.out -mod=readonly ./...
+
+watch: build
+	./ssssg watch
