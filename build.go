@@ -79,6 +79,11 @@ func Build(options BuildOptions) error {
 
 // Watch for changes and build.
 func Watch(options BuildOptions) error {
+	// Start with a build
+	if err := Build(options); err != nil {
+		return err
+	}
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return errors2.Wrap(err, "could not create file watcher")
