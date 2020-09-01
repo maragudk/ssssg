@@ -36,7 +36,7 @@ func Build(options BuildOptions) error {
 		return err
 	}
 
-	t, err := template.New("layouts").ParseGlob(path.Join(options.LayoutsDir, "*.html"))
+	t, err := template.New("layouts").ParseGlob(path.Join(options.LayoutsDir, "*"))
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ type Page struct {
 	Content string
 }
 
-// readPages recursively from dir, saving the config content, the content, and the path.
+// readPages recursively from dir, saving the content and the path.
 func readPages(dir string) ([]Page, error) {
 	var pages []Page
 	entries, err := ioutil.ReadDir(dir)
@@ -198,9 +198,6 @@ func readPages(dir string) ([]Page, error) {
 				return nil, err
 			}
 			pages = append(pages, subPages...)
-			continue
-		}
-		if !strings.HasSuffix(entry.Name(), ".html") {
 			continue
 		}
 
