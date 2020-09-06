@@ -4,19 +4,13 @@ import (
 	"log"
 
 	"github.com/BurntSushi/toml"
+
+	"ssssg"
 )
 
-type Config struct {
-	BuildDir      string
-	ComponentsDir string
-	LayoutsDir    string
-	PagesDir      string
-	StaticsDir    string
-}
-
 // ReadConfig from path.
-func ReadConfig(path string) Config {
-	var c Config
+func ReadConfig(path string) ssssg.Config {
+	var c ssssg.Config
 	if _, err := toml.DecodeFile(path, &c); err != nil {
 		log.Println("Could not read config file, continuing with defaults.")
 	}
@@ -35,6 +29,9 @@ func ReadConfig(path string) Config {
 	}
 	if c.StaticsDir == "" {
 		c.StaticsDir = "statics"
+	}
+	if c.Data == nil {
+		c.Data = map[string]string{}
 	}
 
 	return c

@@ -1,4 +1,4 @@
-{{template "layouts/default"}}
+{{template "layouts/default" .}}
 {{define "title"}}Super Simple Static Site Generator{{end}}
 {{define "description"}}Does the world need another static site generator? Yes, yes it does. 😄{{end}}
 
@@ -14,5 +14,5 @@
   <li>Your <em>pages</em> get built and voila, you have a website</li>
 </ul>
 
-{{template "footer"}}
+{{template "footer" .}}
 {{end}}

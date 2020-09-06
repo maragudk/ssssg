@@ -15,33 +15,34 @@ import (
 	"ssssg/errors2"
 )
 
-type BuildOptions struct {
+type Config struct {
 	BuildDir      string
 	ComponentsDir string
+	Data          map[string]string
 	LayoutsDir    string
 	PagesDir      string
 	StaticsDir    string
 }
 
-func Build(options BuildOptions) error {
-	copyStatics := exec.Command("cp", "-va", options.StaticsDir+"/", options.BuildDir)
+func Build(config Config) error {
+	copyStatics := exec.Command("cp", "-va", config.StaticsDir+"/", config.BuildDir)
 	copyOutput, err := copyStatics.CombinedOutput()
 	fmt.Println(string(copyOutput))
 	if err != nil {
 		return fmt.Errorf("could not copy static files")
 	}
 
-	pages, err := readPages(options.PagesDir)
+	pages, err := readPages(config.PagesDir)
 	if err != nil {
 		return err
 	}
 
-	t, err := template.New("layouts").ParseGlob(path.Join(options.LayoutsDir, "*"))
+	t, err := template.New("layouts").ParseGlob(path.Join(config.LayoutsDir, "*"))
 	if err != nil {
 		return err
 	}
 
-	t, err = parseComponents(t, options.ComponentsDir)
+	t, err = parseComponents(t, config.ComponentsDir)
 	if err != nil {
 		return err
 	}
@@ -53,7 +54,7 @@ func Build(options BuildOptions) error {
 			return err
 		}
 
-		outputPath := path.Join(options.BuildDir, strings.TrimPrefix(page.Path, options.PagesDir+"/"))
+		outputPath := path.Join(config.BuildDir, strings.TrimPrefix(page.Path, config.PagesDir+"/"))
 
 		if err := os.MkdirAll(path.Dir(outputPath), 0766); err != nil {
 			return err
@@ -69,7 +70,7 @@ func Build(options BuildOptions) error {
 			return err
 		}
 
-		if err := t.ExecuteTemplate(output, page.Path, nil); err != nil {
+		if err := t.ExecuteTemplate(output, page.Path, config.Data); err != nil {
 			return err
 		}
 	}
@@ -78,9 +79,9 @@ func Build(options BuildOptions) error {
 }
 
 // Watch for changes and build.
-func Watch(options BuildOptions) error {
+func Watch(config Config) error {
 	// Start with a build
-	if err := Build(options); err != nil {
+	if err := Build(config); err != nil {
 		return err
 	}
 
@@ -102,7 +103,7 @@ func Watch(options BuildOptions) error {
 				}
 
 				log.Println(event.Name, "changed, building", event.String())
-				if err := Build(options); err != nil {
+				if err := Build(config); err != nil {
 					done <- err
 				}
 			case err, ok := <-watcher.Errors:
@@ -114,7 +115,7 @@ func Watch(options BuildOptions) error {
 		}
 	}()
 
-	for _, dir := range []string{options.ComponentsDir, options.LayoutsDir, options.PagesDir, options.StaticsDir} {
+	for _, dir := range []string{config.ComponentsDir, config.LayoutsDir, config.PagesDir, config.StaticsDir} {
 		if err := watcher.Add(dir); err != nil {
 			return errors2.Wrap(err, "could not add %v to watcher", dir)
 		}
