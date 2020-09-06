@@ -11,27 +11,19 @@ import (
 func main() {
 	c := ReadConfig("./ssssg.toml")
 
-	options := ssssg.BuildOptions{
-		BuildDir:      c.BuildDir,
-		ComponentsDir: c.ComponentsDir,
-		LayoutsDir:    c.LayoutsDir,
-		PagesDir:      c.PagesDir,
-		StaticsDir:    c.StaticsDir,
-	}
-
 	var err error
 	flag.Parse()
 	switch flag.Arg(0) {
 	case "init":
-		err = ssssg.Init(options)
+		err = ssssg.Init(c)
 	case "build":
-		err = ssssg.Build(options)
+		err = ssssg.Build(c)
 	case "serve":
 		err = ssssg.Serve(c.BuildDir)
 	case "version":
 		ssssg.Version()
 	case "watch":
-		err = ssssg.Watch(options)
+		err = ssssg.Watch(c)
 	default:
 		printFatal("Usage: ssssg init|build|watch|serve|version")
 	}
