@@ -10,7 +10,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/fsnotify/fsnotify"
+	"github.com/rjeczalik/notify"
 
 	"ssssg/errors2"
 )
@@ -85,43 +85,25 @@ func Watch(config Config) error {
 		return err
 	}
 
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return errors2.Wrap(err, "could not create file watcher")
+	c := make(chan notify.EventInfo, 1)
+	for _, dir := range []string{config.ComponentsDir, config.LayoutsDir, config.PagesDir, config.StaticsDir} {
+		if err := notify.Watch(path.Join(dir, "..."), c, notify.All); err != nil {
+			return errors2.Wrap(err, "could not add %v to watcher", dir)
+		}
 	}
-	defer func() {
-		_ = watcher.Close()
-	}()
+	defer notify.Stop(c)
 
 	done := make(chan error)
 	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-
-				log.Println(event.Name, "changed, building", event.String())
-				if err := Build(config); err != nil {
-					done <- err
-				}
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
+		for event := range c {
+			log.Println(event.Path(), "changed, building")
+			if err := Build(config); err != nil {
 				done <- err
 			}
 		}
 	}()
 
-	for _, dir := range []string{config.ComponentsDir, config.LayoutsDir, config.PagesDir, config.StaticsDir} {
-		if err := watcher.Add(dir); err != nil {
-			return errors2.Wrap(err, "could not add %v to watcher", dir)
-		}
-	}
-	err = <-done
-
+	err := <-done
 	return errors2.Wrap(err, "error watching")
 }
 

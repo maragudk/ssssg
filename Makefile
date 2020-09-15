@@ -15,6 +15,9 @@ cover:
 install: build
 	cp -a ssssg ~/bin
 
+lint:
+	golangci-lint run
+
 run: build clean
 	./ssssg build
 	prettier --write "docs/**/*.html"
