@@ -95,17 +95,10 @@ func Watch(config Config) error {
 
 	done := make(chan error)
 	go func() {
-		for {
-			select {
-			case event, ok := <-c:
-				if !ok {
-					return
-				}
-
-				log.Println(event.Path(), "changed, building")
-				if err := Build(config); err != nil {
-					done <- err
-				}
+		for event := range c {
+			log.Println(event.Path(), "changed, building")
+			if err := Build(config); err != nil {
+				done <- err
 			}
 		}
 	}()
